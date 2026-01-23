@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Credentials
+.env
+
+# Vector DB
+chroma_langchain_db
