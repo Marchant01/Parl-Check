@@ -3,7 +3,7 @@ import requests
 base_url = "https://data.riksdagen.se"
 
 endpoints = {
-    "debatter": "/dokumentlista/?doktyp=debatt",
+    "dokument": "/dokument/",
     "voteringar": "/votering/",
     "ledamöter": "/personlista/",
     "anföranden": "/anforande/",
@@ -40,14 +40,19 @@ def get_all_members():
     response = requests.get(url, params=params, timeout=10)
     return response.json()
 
-def get_debate_text(document_id, debate_nr):
-    url = base_url + endpoints["anföranden"] + document_id + "-" + debate_nr + "/json"
-    
+def get_document(dok_id):
+    url = base_url + endpoints["dokument"] + dok_id
+    response = requests.get(url, timeout=10)
+    return response.text
+
+
+def get_voting(votering_id):
+    url = base_url + endpoints["voteringar"] + votering_id + "/json"
     response = requests.get(url, timeout=10)
     return response.json()
 
+# for documents from a specific member you need the ID. Not needed now
 def get_documents(**kwargs):
-    # for documents from a specific member you need the ID, for the
     params = {"utformat": "json", "person_id": kwargs.get("member_id")}
 
     url = base_url + endpoints["anföranden"]
