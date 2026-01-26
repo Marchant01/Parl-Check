@@ -1,5 +1,7 @@
 import os
 import re
+import torch
+
 from langchain.chat_models import init_chat_model
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -12,12 +14,13 @@ from api_caller import get_document
 
 class Chatbot:
     def __init__(self, api_key, persist_directory="./chroma_langchain_db"):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         os.environ["GOOGLE_API_KEY"] = api_key
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
-            model_kwargs={"device": "cuda"},
+            model_kwargs={"device": device},
             encode_kwargs={
-                "batch_size": 256,
+                "batch_size": 64,
                 "normalize_embeddings": True
             },
             #show_progress=True

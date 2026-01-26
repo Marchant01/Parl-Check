@@ -1,4 +1,5 @@
 import pandas as pd
+import torch
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
@@ -7,11 +8,12 @@ from pathlib import Path
 
 class DocumentHandler:
     def __init__(self, persist_directory="./chroma_langchain_db"):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
-            model_kwargs={"device": "cuda"},
+            model_kwargs={"device": device},
             encode_kwargs={
-                "batch_size": 256,
+                "batch_size": 64,
                 "normalize_embeddings": True
             },
             show_progress=True
@@ -77,6 +79,7 @@ class DocumentHandler:
                 names=columns,
                 dtype={"intressent_id": "string"},
                 encoding=csv_encoding,
+                chunksize=2000,
             )
 
         anforande_files = [
@@ -95,67 +98,69 @@ class DocumentHandler:
 
         for filename in votering_files:
             df = load_csv(filename, votering_columns)
-            for _, row in df.iterrows():
-                text = "".join([
-                    f"Votering: {row.get('rm')} - {row.get('beteckning')}\n",
-                    f"Votering ID: {row.get('votering_id')}\n",
-                    f"Namn: {row.get('namn')}\n",
-                    f"Intressent ID: {row.get('intressent_id')}\n",
-                    f"Parti: {row.get('parti')}\n",
-                    f"Valkrets: {row.get('valkrets')}\n",
-                    f"Röst: {row.get('rost')}\n"
-                    f"Datum: {row.get('systemdatum')}",
-                ])
-                metadata = {
-                    'type': 'votering',
-                    'votering_id': str(row.get('votering_id')),
-                    'rm': str(row.get('rm')),
-                    'beteckning': str(row.get('beteckning')),
-                    'namn': str(row.get('namn')),
-                    'parti': str(row.get('parti')),
-                    'valkrets': str(row.get('valkrets')),
-                    'rost': str(row.get('rost')),
-                    'datum': str(row.get('systemdatum')),
-                }
-                documents.append(Document(
-                    page_content=text,
-                    metadata=metadata
-                ))
+            for chunk in df:
+                for row in chunk.itertuples(index=False):
+                    text = "".join([
+                        f"Votering: {row.rm} - {row.beteckning}\n",
+                        f"Votering ID: {row.votering_id}\n",
+                        f"Namn: {row.namn}\n",
+                        f"Intressent ID: {row.intressent_id}\n",
+                        f"Parti: {row.parti}\n",
+                        f"Valkrets: {row.valkrets}\n",
+                        f"Röst: {row.rost}\n"
+                        f"Datum: {row.systemdatum}",
+                    ])
+                    metadata = {
+                        'type': 'votering',
+                        'votering_id': str(row.votering_id),
+                        'rm': str(row.rm),
+                        'beteckning': str(row.beteckning),
+                        'namn': str(row.namn),
+                        'parti': str(row.parti),
+                        'valkrets': str(row.valkrets),
+                        'rost': str(row.rost),
+                        'datum': str(row.systemdatum),
+                    }
+                    documents.append(Document(
+                        page_content=text,
+                        metadata=metadata
+                    ))
 
         for filename in anforande_files:
             df = load_csv(filename, anforande_columns)
-            for _, row in df.iterrows():
-                text = "".join([
-                    f"Dokument ID: {row.get('dok_id')}\n",
-                    f"Avsnittsrubrik: {row.get('avsnittsrubrik')}\n",
-                    f"Dokument nummer: {row.get('dok_nummer')}\n",
-                    f"Anförande nummer: {row.get('anforande_nummer')}\n",
-                    f"Kammaraktivitet {row.get('kammaraktivitet')}\n",
-                    f"Datum: {row.get('dok_datum')}\n",
-                    f"Talare: {row.get('talare')}\n",
-                    f"Parti: {row.get('parti')}\n",
-                    f"Intressent ID: {row.get('intressent_id')}\n",
-                    f"Rel Dok ID: {row.get('rel_dok_id')}"
-                ])
+            for chunk in df:
+                for row in chunk.itertuples(index=False):
+                    text = "".join([
+                        f"Dokument ID: {row.dok_id}\n",
+                        f"Avsnittsrubrik: {row.avsnittsrubrik}\n",
+                        f"Dokument nummer: {row.dok_nummer}\n",
+                        f"Anförande nummer: {row.anforande_nummer}\n",
+                        f"Kammaraktivitet {row.kammaraktivitet}\n",
+                        f"Datum: {row.dok_datum}\n",
+                        f"Talare: {row.talare}\n",
+                        f"Parti: {row.parti}\n",
+                        f"Intressent ID: {row.intressent_id}\n",
+                        f"Rel Dok ID: {row.rel_dok_id}"
+                    ])
 
-                metadata = {
-                    'type': 'anföring',
-                    'dok_id': str(row.get('dok_id')),
-                    'avsnittsrubrik': str(row.get('avsnittsrubrik')),
-                    'dok_nummer': str(row.get('dok_nummer')),
-                    'anforande_nummer': str(row.get('anforande_nummer')),
-                    'kammaraktivitet': str(row.get('kammaraktivitet')),
-                    'datum': str(row.get('dok_datum')),
-                    'talare': str(row.get('talare')),
-                    'parti': str(row.get('parti')),
-                    'intressent_id': str(row.get('intressent_id')),
-                    'rel_dok_id': str(row.get('rel_dok_id'))
-                }
+                    metadata = {
+                        'type': 'anföring',
+                        'dok_id': str(row.dok_id),
+                        'avsnittsrubrik': str(row.avsnittsrubrik),
+                        'dok_nummer': str(row.dok_nummer),
+                        'anforande_nummer': str(row.anforande_nummer),
+                        'kammaraktivitet': str(row.kammaraktivitet),
+                        'datum': str(row.dok_datum),
+                        'talare': str(row.talare),
+                        'parti': str(row.parti),
+                        'intressent_id': str(row.intressent_id),
+                        'rel_dok_id': str(row.rel_dok_id)
+                    }
 
-                documents.append(Document(
-                    page_content=text,
-                    metadata=metadata
-                ))
+                    documents.append(Document(
+                        page_content=text,
+                        metadata=metadata
+                    ))
 
 
         text_splitter = RecursiveCharacterTextSplitter(
