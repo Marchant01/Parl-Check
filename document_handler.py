@@ -12,10 +12,7 @@ class DocumentHandler:
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
             model_kwargs={"device": device},
-            encode_kwargs={
-                "batch_size": 64,
-                "normalize_embeddings": True
-            },
+            encode_kwargs={"batch_size": 256, "normalize_embeddings": True},
             show_progress=True
         )
         self.persist_directory = persist_directory
@@ -73,13 +70,14 @@ class DocumentHandler:
         csv_encoding = "utf-8"
 
         def load_csv(filename, columns):
+            print(f"Loading Document: {filename}")
             return pd.read_csv(
                 Path("documents") / filename,
                 header=0,
                 names=columns,
                 dtype={"intressent_id": "string"},
                 encoding=csv_encoding,
-                chunksize=2000,
+                chunksize=50000,
             )
 
         anforande_files = [
@@ -94,14 +92,20 @@ class DocumentHandler:
             "votering-202526.csv",
         ]
 
-        documents = []
+        doc_batch_size = 5000
+
+        def add_in_batches(docs):
+            for i in range(0, len(docs), doc_batch_size):
+                vector_store.add_documents(docs[i : i + doc_batch_size])
 
         for filename in votering_files:
             df = load_csv(filename, votering_columns)
             for chunk in df:
+                docs = []
                 for row in chunk.itertuples(index=False):
                     text = "".join([
-                        f"Votering: {row.rm} - {row.beteckning}\n",
+                        f"Votering: {row.rm}\n"
+                        f"Beteckning: {row.beteckning}\n",
                         f"Votering ID: {row.votering_id}\n",
                         f"Namn: {row.namn}\n",
                         f"Intressent ID: {row.intressent_id}\n",
@@ -110,6 +114,7 @@ class DocumentHandler:
                         f"Röst: {row.rost}\n"
                         f"Datum: {row.systemdatum}",
                     ])
+
                     metadata = {
                         'type': 'votering',
                         'votering_id': str(row.votering_id),
@@ -121,14 +126,18 @@ class DocumentHandler:
                         'rost': str(row.rost),
                         'datum': str(row.systemdatum),
                     }
-                    documents.append(Document(
+
+                    docs.append(Document(
                         page_content=text,
                         metadata=metadata
                     ))
 
+                add_in_batches(docs)
+
         for filename in anforande_files:
             df = load_csv(filename, anforande_columns)
             for chunk in df:
+                docs = []
                 for row in chunk.itertuples(index=False):
                     text = "".join([
                         f"Dokument ID: {row.dok_id}\n",
@@ -157,24 +166,27 @@ class DocumentHandler:
                         'rel_dok_id': str(row.rel_dok_id)
                     }
 
-                    documents.append(Document(
+                    docs.append(Document(
                         page_content=text,
                         metadata=metadata
                     ))
+                
+                add_in_batches(docs)
 
 
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            add_start_index=True,
-        )
-        all_splits = text_splitter.split_documents(documents)
+        # text_splitter = RecursiveCharacterTextSplitter(
+        #     chunk_size=1000,
+        #     chunk_overlap=200,
+        #     add_start_index=True,
+        # )
+        # all_splits = text_splitter.split_documents(documents)
+        # print(len(all_splits))
 
-        vector_store = Chroma.from_documents(
-            documents=all_splits,
-            collection_name=self.collection_name,
-            embedding=self.embeddings,
-            persist_directory=self.persist_directory,
-        )
+        # vector_store = Chroma.from_documents(
+        #     documents=all_splits,
+        #     collection_name=self.collection_name,
+        #     embedding=self.embeddings,
+        #     persist_directory=self.persist_directory,
+        # )
 
         return vector_store

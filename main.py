@@ -12,7 +12,7 @@ def main():
     print("Done!")
     bot = Chatbot(api_key=google_api_key)
     result = bot.ask(
-        "Hur har SD röstat under 2024 - 2025"
+        "Vad nämndes under anförande HA091?"
     )
     print(result)
 

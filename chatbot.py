@@ -20,7 +20,7 @@ class Chatbot:
             model_name="sentence-transformers/all-mpnet-base-v2",
             model_kwargs={"device": device},
             encode_kwargs={
-                "batch_size": 64,
+                "batch_size": 256,
                 "normalize_embeddings": True
             },
             #show_progress=True
@@ -38,12 +38,13 @@ class Chatbot:
 
         bs_transformer = BeautifulSoupTransformer()
 
-        def fetch_document_html(doc_id: str) -> Document:
-            html = get_document(doc_id)
+        def fetch_document_html(dok_id: str) -> Document:
+            html = get_document(dok_id)
             return Document(
                 page_content=html,
-                metadata={"doc_id": doc_id, "source": f"https://data.riksdagen.se/dokument/{doc_id}/html"}
+                metadata={"dok_id": dok_id, "source": f"https://data.riksdagen.se/dokument/{dok_id}/html"}
             )
+        
 
         def html_to_text(doc: Document) -> Document:
             cleaned = bs_transformer.transform_documents([doc], tags_to_extract=["p", "h1", "h2", "h3", "li"])
@@ -78,7 +79,7 @@ class Chatbot:
             if not docs:
                 return {}
             m = docs[0].metadata or {}
-            #print("retriever hit:", m)
+            print("retriever hit:", m)
             return {
                 "dok_id": m.get("dok_id"),
                 "kammaraktivitet": m.get("kammaraktivitet"),
@@ -102,12 +103,12 @@ class Chatbot:
             if not dok_id:
                 return {**base, "data": "", "speakers": []}
             
-            #print("fetching dok_id:", dok_id)
+            print("fetching dok_id:", dok_id)
             raw_doc = fetch_document_html(dok_id)
             clean_doc = html_to_text(raw_doc)
 
             speakers = extract_name_and_parties(clean_doc)
-            #print(clean_doc.page_content)
+            print(clean_doc.page_content)
             return {
                 **base, 
                 "data": clean_doc.page_content, 
