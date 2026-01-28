@@ -1,6 +1,7 @@
 import os
 import re
 import torch
+import json as pyjson
 
 from langchain.chat_models import init_chat_model
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -10,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_transformers import BeautifulSoupTransformer
 from langchain_core.documents import Document
 
-from api_caller import get_document
+from api_caller import get_document, get_voting
 
 class Chatbot:
     def __init__(self, api_key, persist_directory="./chroma_langchain_db"):
@@ -34,7 +35,7 @@ class Chatbot:
             persist_directory=persist_directory,
         )
 
-        self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 10})
+        self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 5})
 
         bs_transformer = BeautifulSoupTransformer()
 
@@ -45,10 +46,27 @@ class Chatbot:
                 metadata={"dok_id": dok_id, "source": f"https://data.riksdagen.se/dokument/{dok_id}/html"}
             )
         
+        def fetch_voting_document(votering_id: str) -> Document:
+            voting_doc = get_voting(votering_id)
+            
+            if isinstance(voting_doc, str):
+                voting_doc = pyjson.loads(votering_id)
+
+            dok_id = voting_doc.get("dok_id")
+
+            return Document(
+                page_content="",
+                metadata={
+                    "type": "votering",
+                    "votering_id": votering_id,
+                    "dok_id": dok_id,
+                    "source": f"https://data.riksdagen.se/votering/{votering_id}/json",
+                    "type": "votering",
+                },
+            )
 
         def html_to_text(doc: Document) -> Document:
             cleaned = bs_transformer.transform_documents([doc], tags_to_extract=["p", "h1", "h2", "h3", "li"])
-
             return cleaned[0]
 
         def extract_name_and_parties(cleaned_doc: Document) -> list[dict]:
@@ -62,7 +80,6 @@ class Chatbot:
 
             pairs = re.findall(r"([^,]+?)\s*\(([^)]+)\)", tail)
             return [{"namn": name.strip(), "parti": party.strip()} for name, party in pairs]
-
 
         self.prompt = ChatPromptTemplate.from_template(
             "Du svarar endast utifrån data.\n\n"
@@ -82,6 +99,7 @@ class Chatbot:
             print("retriever hit:", m)
             return {
                 "dok_id": m.get("dok_id"),
+                "votering_id": m.get("votering_id"),
                 "kammaraktivitet": m.get("kammaraktivitet"),
                 "avsnittsrubrik": m.get("avsnittsrubrik"),
                 "talare": m.get("talare"),
@@ -90,6 +108,7 @@ class Chatbot:
 
         def build_context(hit: dict):
             dok_id = hit.get("dok_id")
+            votering_id = hit.get("votering_id")
 
             # Lyft alltid upp metadata så prompten alltid har nycklarna
             base = {
@@ -99,6 +118,11 @@ class Chatbot:
                 "talare": hit.get("talare"),
                 "parti": hit.get("parti"),
             }
+
+            if not dok_id and votering_id:
+                voting_doc = fetch_voting_document(votering_id)
+                dok_id = voting_doc.metadata.get("dok_id")
+                base["dok_id"] = dok_id
 
             if not dok_id:
                 return {**base, "data": "", "speakers": []}

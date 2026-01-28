@@ -12,7 +12,8 @@ def main():
     print("Done!")
     bot = Chatbot(api_key=google_api_key)
     result = bot.ask(
-        "Vad nämndes under anförande HA091?"
+        # "Vad nämndes under anförande HA091?"
+        "Kan du ge mig information om anföranden relaterat till klimatet och miljön?"
     )
     print(result)
 
