@@ -50,7 +50,7 @@ class Chatbot:
             voting_doc = get_voting(votering_id)
             
             if isinstance(voting_doc, str):
-                voting_doc = pyjson.loads(votering_id)
+                voting_doc = pyjson.loads(voting_doc)
 
             dok_id = voting_doc.get("dok_id")
 
@@ -61,7 +61,6 @@ class Chatbot:
                     "votering_id": votering_id,
                     "dok_id": dok_id,
                     "source": f"https://data.riksdagen.se/votering/{votering_id}/json",
-                    "type": "votering",
                 },
             )
 
@@ -152,5 +151,4 @@ class Chatbot:
         """ Main qeuery """
         response = self.pipeline.invoke(question)
         return {"answer": response.content}
-
         
