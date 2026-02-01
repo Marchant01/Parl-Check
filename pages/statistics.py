@@ -19,7 +19,7 @@ def load_dfs(files, columns):
             dtype={"intressent_id": "string"}, 
             encoding="utf-8"
         )
-        frames.append(df)
+        dfs.append(df)
     return dfs
 
 anforande_files = [
@@ -66,7 +66,12 @@ votering_columns = [
     'systemdatum'
 ]
 
-anforande_dfs = load_dfs(anforande_files, anforande_columns)
-votering_dfs = load_dfs(votering_files, votering_columns)
+anforande_dfs = pd.concat(load_dfs(anforande_files, anforande_columns), ignore_index=True)
+votering_dfs = pd.concat(load_dfs(votering_files, votering_columns), ignore_index=True)
 
+parties = anforande_dfs['parti'].unique()
+
+st.multiselect("Filter:", options=parties)
 st.write(anforande_dfs)
+
+st.write(votering_dfs)

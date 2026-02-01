@@ -19,6 +19,7 @@ class Chatbot:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         os.environ["GOOGLE_API_KEY"] = api_key
         
+        #Local embedding model that will run either run with cuda(GPU) or PCU
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
             model_kwargs={"device": device},
@@ -29,6 +30,7 @@ class Chatbot:
             #show_progress=True
         )
         
+        #LLM model through API key
         self.model = init_chat_model("google_genai:gemini-2.5-flash-lite")
         
         self.vector_store = Chroma(
@@ -37,20 +39,24 @@ class Chatbot:
             persist_directory=persist_directory,
         )
 
+        #Retriever that will search in the vector store
         self.retriever = self.vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 5, "fetch_k": 60})
 
+        #Second retriever that will search in fetched documents from the gov. API
         self.text_store = Chroma(
             collection_name='document_text',
             embedding_function=self.embeddings,
             persist_directory=persist_directory
         )
 
+        #Text splitter
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
             add_start_index=True,
         )
 
+        
         bs_transformer = BeautifulSoupTransformer()
 
         def fetch_document_html(dok_id: str) -> Document:
@@ -78,16 +84,6 @@ class Chatbot:
                 },
             )
 
-        self.prompt = ChatPromptTemplate.from_template(
-            "Du svarar endast utifrån data.\n\n"
-            "DOK_ID: {dok_id}\n"
-            "KAMMARAKTIVITET: {kammaraktivitet}\n"
-            "AVSNITTSRUBRIK: {avsnittsrubrik}\n"
-            "TALARE/PARTIER: {speakers}\n\n"
-            "TEXT:\n{data}\n\n"
-            "FRÅGA:\n{question}\n\n"
-            "SVAR:"
-        )
 
         def html_to_text(doc: Document) -> Document:
             cleaned = bs_transformer.transform_documents([doc], tags_to_extract=["p", "h1", "h2", "h3", "li"])
@@ -178,6 +174,18 @@ class Chatbot:
             data = data[:12000]
 
             return {**base, "data": clean_doc.page_content, "speakers": speakers}
+
+        #Prompt for LLM
+        self.prompt = ChatPromptTemplate.from_template(
+            "Du svarar endast utifrån data.\n\n"
+            "DOK_ID: {dok_id}\n"
+            "KAMMARAKTIVITET: {kammaraktivitet}\n"
+            "AVSNITTSRUBRIK: {avsnittsrubrik}\n"
+            "TALARE/PARTIER: {speakers}\n\n"
+            "TEXT:\n{data}\n\n"
+            "FRÅGA:\n{question}\n\n"
+            "SVAR:"
+        )
 
         self.pipeline = (
             {
