@@ -106,7 +106,7 @@ class Chatbot:
             if not docs:
                 return {}
             m = docs[0].metadata or {}
-            print("retriever hit:", m)
+            # print("retriever hit:", m)
             return {
                 "dok_id": m.get("dok_id"),
                 "votering_id": m.get("votering_id"),
@@ -128,7 +128,7 @@ class Chatbot:
             chunks = self.text_splitter.split_documents([base_doc])
             for c in chunks:
                 c.metadata["dok_id"] = dok_id
-                print(c)
+                # print(c)
             
             self.text_store.add_documents(chunks)
 
@@ -147,18 +147,19 @@ class Chatbot:
 
             if not dok_id and votering_id:
                 voting_doc = fetch_voting_document(votering_id)
+                print(dok_id)
                 dok_id = voting_doc.metadata.get("dok_id")
                 base["dok_id"] = dok_id
 
             if not dok_id:
                 return {**base, "data": "", "speakers": []}
             
-            print("fetching dok_id:", dok_id)
+            # print("fetching dok_id:", dok_id)
             raw_doc = fetch_document_html(dok_id)
             clean_doc = html_to_text(raw_doc)
 
             speakers = extract_name_and_parties(clean_doc)
-            print(clean_doc.page_content)
+            # print(clean_doc.page_content)
 
             index_doc_if_missing(dok_id, clean_doc.page_content)
 
