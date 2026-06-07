@@ -1,13 +1,13 @@
 services:
-  fastapi_service:
+  app:
     build: .
     ports:
       - "8000:8000"
     depends_on:
-      - postgres:
+      - db
     env_file:
       - .env
-  postgres:
+  db:
     image: postgres:18
     container_name: postgres
     hostname: postgres
@@ -20,6 +20,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+      - postgres:/var/lib/postgresql/data
     restart: unless-stopped
-    network_mode: "host"
+
+volumes:
+  postgres:
