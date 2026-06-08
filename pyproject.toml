@@ -18,6 +18,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "numpy>=2.4.1",
     "pandas>=2.3.3",
+    "pgvector>=0.4.2",
     "pyjson>=1.4.1",
     "requests>=2.32.5",
     "sentence-transformers>=5.2.0",

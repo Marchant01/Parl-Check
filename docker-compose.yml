@@ -7,9 +7,9 @@ services:
       - db
     env_file:
       - .env
+
   db:
-    image: postgres:18
-    container_name: postgres
+    image: pgvector/pgvector:0.8.2-pg18-trixie
     hostname: postgres
     environment:
       POSTGRES_DB: gov_check_db
@@ -20,8 +20,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./init-db:/docker-entrypoint-initdb.d
-      - postgres:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      - postgres:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
