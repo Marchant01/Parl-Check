@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Mapped, mapped_column
 
 from pgvector.sqlalchemy import Vector
 
-import uuid
+from uuid import uuidv7, uuid
 
 DATABASE_URL = "postgresql+psycopg://govcheck_user@localhost:5432/gov_check_db"
 
@@ -38,7 +38,7 @@ class Anforande(Base):
     dok_titel: Mapped[str] = mapped_column(String(255))
     dok_rm: Mapped[str] = mapped_column(String(20))
     dok_nummer: Mapped = mapped_column(Integer)
-    dok_datum: Mapped[datetime] = mapped_column(Datetime(timezone=True))
+    dok_datum: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     avsnittsrubrik: Mapped[str] = mapped_column(String(255))
     underrubrik: Mapped[str] = mapped_column(String(255))
     kammaraktivitet: Mapped[str] = mapped_column(String(250))
@@ -50,7 +50,7 @@ class Anforande(Base):
     intressent_id: Mapped[str] = mapped_column(String(50)) # Could be a fk to intressent_id in person
     rel_dok_id: Mapped[str] = mapped_column(String(50))
     replik: Mapped[str] = mapped_column(String(1))
-    systemdatum: Mapped[datetime] = mapped_column(Datetime(timezone=True))
+    systemdatum: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     embedding: Mapped[list[float]] = mapped_column(Vector(768)) # This must exactly match the same dimensional embeddings as the embedding model!
 
 class Person(Base):
@@ -67,16 +67,10 @@ class Person(Base):
     status: Mapped[str] = mapped_column(String(100))
     embedding: Mapped[list[float]] = mapped_column(Vector(768))
 
-class Dokument(base):
+class Dokument(Base):
     __tablename__ = 'dokument'
     dok_id: Mapped[str] = mapped_column(String, primary_key=True)
     innehåll: Mapped[str] = mapped_column(Text)
-
-class DokumentChunk(Base):
-    __tablename__ = 'dokument_chunk'
-    id: Mapped[uuid.UUID] = mapped_column(server_default=func-uuidv7(monotonic=True))
-    dok_id: Mapped[str] = mapped_column(String, primary_key=True)
-    embedding: Mapped[List[float]] = mapped_column(Vector(768))
+    embedding: Mapped[list[float]] = mapped_column(Vector(768))
     
-
-
+    # id: Mapped[uuid.UUID] = mapped_column(server_default=func-uuidv7(monotonic=True))
