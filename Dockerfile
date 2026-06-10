@@ -11,3 +11,11 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 CMD ["python", "-m", "gov_check"]
+
+FROM python:3.13-slim AS test
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app /app
+RUN uv add pytest
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["python", "-m", "pytest", "tests/", "-q"]

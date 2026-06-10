@@ -8,6 +8,17 @@ services:
     env_file:
       - .env
 
+  tests:
+    profiles:
+      - test
+    build:
+      context: .
+      target: test
+    depends_on:
+      - db
+    env_file:
+      - .env
+
   db:
     image: pgvector/pgvector:0.8.2-pg18-trixie
     hostname: postgres
