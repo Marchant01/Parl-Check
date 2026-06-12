@@ -15,9 +15,9 @@ services:
       context: .
       target: test
     depends_on:
-      - db
+      - db-test
     env_file:
-      - .env
+      - .env.test
 
   db:
     image: pgvector/pgvector:0.8.2-pg18-trixie
@@ -34,6 +34,22 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d:ro
       - postgres:/var/lib/postgresql
     restart: unless-stopped
+
+  db-test:
+    profiles:
+      - test
+    image: pgvector/pgvector:0.8.2-pg18-trixie
+    hostname: postgres
+    environment:
+      POSTGRES_DB: gov_check_db_test
+      POSTGRES_USER: govcheck_user
+      POSTGRES_PASSWORD: gov_check_pw
+      TZ: Europe/Stockholm
+      PGTZ: Europe/Stockholm
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d:ro
 
 volumes:
   postgres:
