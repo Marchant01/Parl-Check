@@ -6,7 +6,7 @@ RUN uv sync --frozen --no-install-project
 COPY . .
 RUN uv sync --frozen --no-editable
 
-FROM python:3.13-slim
+FROM python:3.13-slim AS app
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
