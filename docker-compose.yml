@@ -51,7 +51,7 @@ services:
       TZ: Europe/Stockholm
       PGTZ: Europe/Stockholm
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./init-db:/docker-entrypoint-initdb.d:ro
 
