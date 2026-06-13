@@ -16,7 +16,7 @@ from pgvector.sqlalchemy import Vector
 
 from uuid import uuidv7, uuid
 
-DATABASE_URL = "postgresql+psycopg://govcheck_user@localhost:5432/gov_check_db"
+DATABASE_URL = "postgresql+psycopg2://gov_check_user@gov_check_pw:5432/gov_check_db"
 
 engine = create_engine(DATABASE_URL)
 
