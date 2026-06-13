@@ -9,7 +9,7 @@ from sqlalchemy import (
     create_engine,
     text
 )
-# from database import Dokument
+from database import Dokument
 
 # import os
 
@@ -42,8 +42,5 @@ def test_connection(engine):
     with engine.connect() as conn:
         assert conn.scalar(text("SELECT 1"))
 
-# def seed_test_database(SessionLocal: session):
-#     result = (
-#         Dokument.insert("").returning(dokument.c.)
-#     )
-#     pass
+def test_seed():
+    pass
