@@ -19,7 +19,8 @@ services:
       context: .
       target: test
     depends_on:
-      - db-test
+      db-test:
+        condition: service_healthy
     env_file:
       - .env.test
 
@@ -28,7 +29,7 @@ services:
     hostname: postgres
     environment:
       POSTGRES_DB: gov_check_db
-      POSTGRES_USER: govcheck_user
+      POSTGRES_USER: gov_check_user
       POSTGRES_PASSWORD: gov_check_pw
       TZ: Europe/Stockholm
       PGTZ: Europe/Stockholm
@@ -43,10 +44,10 @@ services:
     profiles:
       - test
     image: pgvector/pgvector:0.8.2-pg18-trixie
-    hostname: postgres
+    hostname: postgres-test
     environment:
       POSTGRES_DB: gov_check_db_test
-      POSTGRES_USER: govcheck_user
+      POSTGRES_USER: gov_check_user
       POSTGRES_PASSWORD: gov_check_pw
       TZ: Europe/Stockholm
       PGTZ: Europe/Stockholm
@@ -54,6 +55,11 @@ services:
       - "5433:5432"
     volumes:
       - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gov_check_user -d gov_check_db_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres:
