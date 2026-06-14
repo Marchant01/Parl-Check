@@ -64,7 +64,10 @@ class Person(Base):
     iort: Mapped[str] = mapped_column(String(40))
     parti: Mapped[str] = mapped_column(String(40))
     valkrets: Mapped[str] = mapped_column(String(50))
+    uppdragsroll: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(100))
+    start_datum: Mapped[datetime] = mapped_column(Datetime(timezone=True))
+    slut_datum: Mapped[datetime] = mapped_column(Datetime(timezone=True))
     embedding: Mapped[list[float]] = mapped_column(Vector(768))
 
 class Dokument(Base):
