@@ -15,3 +15,6 @@ wheels/
 
 # Vector DB
 chroma_langchain_db
+
+# Documents
+documents/
