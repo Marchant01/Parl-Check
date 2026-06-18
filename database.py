@@ -17,7 +17,7 @@ from pgvector.sqlalchemy import Vector
 
 import uuid
 
-DATABASE_URL = "postgresql+psycopg2://gov_check_user@gov_check_pw:5432/gov_check_db"
+pythonDATABASE_URL = "postgresql+psycopg2://gov_check_user:gov_check_pw@localhost:5432/gov_check_db"
 PATH_TO_CSV = "documents/personer"
 
 engine = create_engine(
@@ -72,12 +72,12 @@ class Dokument(Base):
 
 class Person(Base):
     __tablename__ = "person"
-    förnamn: Mapped[str] = mapped_column(String(80))
+    fornamn: Mapped[str] = mapped_column(String(80))
     efternamn: Mapped[str] = mapped_column(String(80))
     parti: Mapped[str] = mapped_column(String(40))
-    intressent_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    kön: Mapped[str] = mapped_column(String(6))
-    född: Mapped[int] = mapped_column(Integer)
+    intressent_id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    kon: Mapped[str] = mapped_column(String(6))
+    fodd: Mapped[int] = mapped_column(Integer)
     valkrets: Mapped[str] = mapped_column(String(50))
 
     anforanden: Mapped[list["Anforande"]] = relationship("Anforande", back_populates="person")
@@ -94,8 +94,8 @@ class Votering(Base):
     punkt: Mapped[int] = mapped_column(Integer)
     namn: Mapped[str] = mapped_column(String(250))
 
-    intressent_id: Mapped[str] = mapped_column(Integer, ForeignKey("person.intressent_id"))
-    person: Mapped["Person"] = relationship("Person", back_populates="voteringar")
+    intressent_id: Mapped[int] = mapped_column(Integer, ForeignKey("person.intressent_id"))
+    person: Mapped["Person"] = relationship("Person", back_populates="votering")
 
     parti: Mapped[str] = mapped_column(String(4))
     valkrets: Mapped[str] = mapped_column(String(50))
@@ -116,7 +116,7 @@ class Votering(Base):
 def seed_all():
     print("Trying to create database...")
     try:
-        Base.metadadata.create_all(bind=engine)
+        Base.metadata.create_all(engine)
         print("Tables created...")
 
         seed_tables_sql(SessionLocal, "anforanden")
@@ -128,3 +128,6 @@ def seed_all():
 
     except Exception as e:
         print(f"Error seeding{e}")
+
+if __name__ == "__main__":
+    seed_all()

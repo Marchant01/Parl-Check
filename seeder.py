@@ -29,12 +29,12 @@ def seed_tables_sql(db: sessionmaker, path_to_directory: str):
 
 def seed_persons(db: sessionmaker, path_to_csv: str):
     columns = {
-        "Förnamn": "förnamn",
+        "Förnamn": "fornamn",
         "Efternamn": "efternamn",
         "Parti": "parti",
         "Id": "intressent_id",
-        "Kön": "kön",
-        "Född": "född",
+        "Kön": "kon",
+        "Född": "fodd",
         "Valkrets": "valktrets",
     }
 
