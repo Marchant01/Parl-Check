@@ -1,6 +1,10 @@
 import pandas as pd
+import torch
+import os
 from pathlib import Path
 import re
+
+from dotenv import load_dotenv
 
 from sqlalchemy import (
     create_engine,
@@ -8,6 +12,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 from pgvector.sqlalchemy import Vector
+from psycopg2.extras import Json
+
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_postgres import PGVectorStore, PGEngine
+from langchain_core.documents import Document
+
+CONNECTION_STRING = os.getenv("DATABASE_URL")
 
 PERSON_DATA_PATH = "documents/personer/personer"
 DOCUMENTS_PATH = Path('documents')
@@ -63,3 +75,35 @@ def seed_persons(sess: Session, engine, path_to_csv: str):
     
     except Exception as e:
         print(f"Error seeding the person table: {e}")
+
+
+def seed_embeddings(sess: Session, columns: list[str], table: str):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-mpnet-base-v2",
+        model_kwargs={"device": device},
+        encode_kwargs={"batch_size": 256, "normalize_embeddings": True},
+        show_progress=True
+    )
+    pg_engine = PGEngine.from_connection_string(CONNECTION_STRING)
+    cols = ", ".join(f'"{col}"' for col in columns)
+
+    try:
+        result = sess.execute(text(f"SELECT {cols} FROM {table} WHERE embedding IS NULL"))
+        rows = result.fetchall()
+    
+        if not rows:
+            print(f"No rows in {table}")
+            return
+        
+        print(f"Generating embeddings for {len(rows)} rows in '{table}'...")
+        
+        vector_store = PGVectorStore.create_sync(
+            engine=pg_engine,
+            embedding_service=embeddings,
+            table_name=table
+        )
+        
+    
+    except Exception as e:
+        print(f"Error generating embeddings for '{table}': {e}")
