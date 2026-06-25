@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 
 from sqlalchemy import (
     create_engine,
-    text
+    text,
+    update
 )
 from sqlalchemy.orm import Session
 from pgvector.sqlalchemy import Vector
@@ -22,7 +23,7 @@ CONNECTION_STRING = os.getenv("DATABASE_URL")
 PERSON_DATA_PATH = "documents/personer/personer"
 DOCUMENTS_PATH = Path('documents')
 
-BATCH_SIZE = 256
+BATCH_SIZE = 128
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 100
 
@@ -60,7 +61,7 @@ def seed_persons(sess: Session, engine, path_to_csv: str):
         "Id": "intressent_id",
         "Kön": "kon",
         "Född": "fodd",
-        "Valkrets": "valktrets",
+        "Valkrets": "valkrets",
     }
 
     person_df = pd.read_csv(path_to_csv, header=0, usecols=columns)
@@ -74,21 +75,28 @@ def seed_persons(sess: Session, engine, path_to_csv: str):
             if_exists="replace",
             index=False
         )
-    
+
+        sess.execute(text("ALTER TABLE person ADD COLUMN IF NOT EXISTS embedding vector(768)"))
+        sess.commit()
+
     except Exception as e:
         print(f"Error seeding the person table: {e}")
 
 
-def seed_embeddings(sess: Session, embed_columns: list[str], id_column: str, table: str, embed_column: str = "embedding"):
+def seed_embeddings(sess: Session, table: str, id_column: str, embed_columns: list[str], embed_column: str = "embedding"):
+    """
+    Generates and seeds embeddings based on targeted columns and tables.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     embedding_model = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-mpnet-base-v2",
         model_kwargs={"device": device},
         encode_kwargs={"batch_size": BATCH_SIZE, "normalize_embeddings": True},
-        show_progress=True
+        show_progress=True,
+        
     )
     col_names = [id_column] + embed_columns
-    cols = ", ".join(f'"{col}"' for col in embed_columns)
+    cols = ", ".join(f'"{col}"' for col in col_names)
 
     try:
         result = sess.execute(text(f"SELECT {cols} FROM {table} WHERE embedding IS NULL"))
@@ -104,7 +112,7 @@ def seed_embeddings(sess: Session, embed_columns: list[str], id_column: str, tab
             batch = rows[i:i + BATCH_SIZE]
 
             texts = [
-                " ". join(str(row[col_names.index(col)]) for col in columns if row[col_names.index(col)] is not None)
+                " ". join(str(getattr(row, col)) for col in embed_columns if getattr(row, col) is not None)
                 for row in batch
             ]
 
@@ -113,10 +121,11 @@ def seed_embeddings(sess: Session, embed_columns: list[str], id_column: str, tab
             for row, vector in zip(batch, vectors):
                 sess.execute(
                     text(f'UPDATE {table} SET {embed_column} = :vec WHERE "{id_column}" = :id'),
-                    {"vex": str(vector), "id": row[col_names.index(id_column)]}
+                    {"vec": vector, "id": row._mapping[id_column]}
                 )
             
             sess.commit()
+            torch.cuda.empty_cache()
             print(f"  Committed batch {i // BATCH_SIZE + 1} ({min(i + BATCH_SIZE, len(rows))}/{len(rows)})")
 
         print(f"Done seeding embeddings for '{table}'.")
