@@ -1,16 +1,10 @@
 import os
 import streamlit as st
 from chatbot import Chatbot
-from document_handler import DocumentHandler
 
 @st.cache_resource
-def get_vector_store():
-    handler = DocumentHandler()
-    return handler.build_vector_store()
-
-@st.cache_resource
-def get_chat_bot(google_api_key):
-    bot = Chatbot(api_key=google_api_key)
+def get_chat_bot():
+    bot = Chatbot()
     return bot
 
 def chat_history():
@@ -18,16 +12,16 @@ def chat_history():
         st.session_state.messages = []
 
 def main():
-    st.title("Welcome To Parl-Check!")
+    st.title("Välkommen till Parl-Check!")
     chat_history()
-    get_vector_store()
+    
+    bot = get_chat_bot()
 
     google_api_key = st.sidebar.text_input("Google API Key", type="password")
     if not google_api_key:
         st.warning("Please enter your google API key!")
         return
 
-    bot = get_chat_bot(google_api_key)
 
     for turn in st.session_state.messages:
         st.chat_message("user").write(turn["question"])
