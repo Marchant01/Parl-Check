@@ -11,7 +11,7 @@ from sqlalchemy import (
     Uuid
 )
 
-from seeder import seed_tables_sql, seed_persons
+from seeder import seed_tables_sql, seed_persons, seed_embeddings
 
 from sqlalchemy.orm import sessionmaker, declarative_base, Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
@@ -120,13 +120,19 @@ def seed_all():
         with SessionLocal() as session:
             seed_tables_sql(session, "anforanden")
             seed_tables_sql(session, "voteringar")
+            seed_persons(session, engine, PATH_TO_CSV)
 
-        seed_persons(session, engine, PATH_TO_CSV)
+            print("Database created and main columns seeded. Proceeding with seeding embeddings...")
 
-        print("Database created and seeded! ")
+            seed_embeddings(session, "anforande", "anforande_id", ["anforandetext"])
+            seed_embeddings(session, "votering", "id", ["namn", "parti", "rost", "avser"])
+            seed_embeddings(session, "person", "intressent_id", ["fornamn", "efternamn", "parti", "valkrets"])
+
+            print("Embedding columns seeded...")
 
     except Exception as e:
         print(f"Error seeding{e}")
+
 
 if __name__ == "__main__":
     seed_all()
