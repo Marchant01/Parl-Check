@@ -19,7 +19,7 @@ class Chatbot:
     def __init__(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         load_dotenv()
-        self.api_key = os.getenv("GOOGLE_API_KEY")
+        self.api_key = os.getenv("LLM_API_KEY")
         
         #Local embedding model that will run either run with cuda(GPU) or PCU
         self.embeddings = HuggingFaceEmbeddings(
