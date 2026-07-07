@@ -17,12 +17,6 @@ def main():
     
     bot = get_chat_bot()
 
-    google_api_key = st.sidebar.text_input("Google API Key", type="password")
-    if not google_api_key:
-        st.warning("Please enter your google API key!")
-        return
-
-
     for turn in st.session_state.messages:
         st.chat_message("user").write(turn["question"])
         st.chat_message("assistant").write(turn["answer"])
