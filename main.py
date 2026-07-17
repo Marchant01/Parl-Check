@@ -1,6 +1,9 @@
 import os
 import streamlit as st
 from chatbot import Chatbot
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
 
 @st.cache_resource
 def get_chat_bot():
@@ -35,3 +38,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
+
+@app.get("/anforande/{anforande_id}")
+async def read_anforande(anforande_id):
+    return {"anforande_id": anforande_id}
