@@ -27,7 +27,6 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "sentence-transformers>=5.2.0",
-    "streamlit>=1.53.0",
     "uuid7-standard>=1.1.0",
 ]
 
