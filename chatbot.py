@@ -18,8 +18,10 @@ from sqlalchemy import create_engine, text
 class Chatbot:
     def __init__(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         load_dotenv()
         self.api_key = os.getenv("LLM_API_KEY")
+        self.database_url = os.getenv("DATABASE_URL")
         
         #Local embedding model that will run either run with cuda(GPU) or PCU
         self.embeddings = HuggingFaceEmbeddings(
@@ -31,7 +33,6 @@ class Chatbot:
             },
         )
         
-        self.database_url = os.getenv("DATABASE_URL")
         
         self.engine = create_engine(
             self.database_url,
@@ -43,7 +44,7 @@ class Chatbot:
         self.SessionLocal = sessionmaker(bind=self.engine)
         
         #LLM model through API key
-        self.model = init_chat_model("google_genai:gemini-2.5-flash-lite")
+        self.model = init_chat_model("google_genai:gemini-2.5-flash-lite", api_key=self.api_key)
                 
         #Prompt for LLM
         self.prompt = ChatPromptTemplate.from_template(
