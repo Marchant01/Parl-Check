@@ -1,7 +1,8 @@
-example.com {
-    reverse_proxy frontend:80
+parl-check.se {
+    root * /srv/frontend
+    file_server
 }
 
-api.example.com {
-    reverse_proxy backend: 8000
+api.parl-check.se {
+    reverse_proxy backend:8000
 }
