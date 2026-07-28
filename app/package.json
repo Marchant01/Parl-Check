@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "generate-routes": "tsr generate",
+    "build": "tsc generate && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/eslint-plugin-query": "^5.101.2",
+    "@tanstack/router-cli": "^1.167.21",
     "@tanstack/router-plugin": "^1.168.20",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
