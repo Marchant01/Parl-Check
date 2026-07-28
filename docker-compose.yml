@@ -1,16 +1,41 @@
 services:
-  app:
+  caddy:
+    image: caddy:latest
+    ports:
+    - "80:80"
+    - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - frontend_dist:/srv/frontend:ro
+    restart: unless-stopped
+
+  backend:
     profiles:
-      - app
+      - backend
     build: 
       context: .
-      target: app
+      target: backend
     ports:
       - "8000:8000"
     depends_on:
       - db
     env_file:
       - .env
+    restart: unless-stopped
+
+  frontend:
+    profiles:
+      - frontend
+    build: 
+      context: ./app/
+      target: frontend-build
+    env_file:
+      - .env
+    volumes:
+      - frontend_dist:/usr/src/dist
+    restart: unless-stopped
 
   tests:
     profiles:
@@ -63,3 +88,6 @@ services:
 
 volumes:
   postgres:
+  caddy_data:
+  caddy_config:
+  frontend_dist:

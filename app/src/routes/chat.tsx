@@ -25,7 +25,7 @@ function ChatComponent() {
         },
       ])
     }
-  })
+  });
 
   const handleeSubmit = (e: React.SubmitEvent) => {
     e.preventDefault()
