@@ -25,10 +25,10 @@ class Chatbot:
         
         #Local embedding model that will run either run with cuda(GPU) or PCU
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-mpnet-base-v2",
+            model_name="KBLab/sentence-bert-swedish-cased",
             model_kwargs={"device": device},
             encode_kwargs={
-                "batch_size": 128,
+                "batch_size": 64,
                 "normalize_embeddings": True
             },
         )

@@ -89,7 +89,7 @@ def seed_embeddings(sess: Session, table: str, id_column: str, embed_columns: li
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     embedding_model = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-mpnet-base-v2",
+        model_name="KBLab/sentence-bert-swedish-cased",
         model_kwargs={"device": device},
         encode_kwargs={"batch_size": BATCH_SIZE, "normalize_embeddings": True},
         show_progress=True,
