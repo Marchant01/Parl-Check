@@ -69,12 +69,14 @@ def fetch_document_html(dok_id: str) -> Document:
     
     try:
         html = get_document(dok_id)
-        return Document(
+        return content(
             page_content=html,
             metadata={"dok_id": dok_id, "source": f"https://data.riksdagen.se/dokument/{dok_id}/html"}
         )
     except Exception as e:
         print(f"Error fetching document {dok_id}: {e}")
+        error = {'Error': e}
+        return error
 
 def get_documents(dok_ids: list[str]) -> list[dict[str, str]]:
     """
