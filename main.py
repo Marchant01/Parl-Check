@@ -7,17 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api_caller import fetch_document_html
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https//api.parlcheck.se"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 load_dotenv()
 API_BASE = os.getenv("API_BASE")
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://parlcheck.se"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 bot = Chatbot()
 

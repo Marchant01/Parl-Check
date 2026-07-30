@@ -9,6 +9,7 @@ RUN uv sync --frozen --no-editable
 FROM python:3.13-slim AS backend
 WORKDIR /backend
 COPY --from=builder /backend/.venv /backend/.venv
+COPY --from=builder /backend /backend
 ENV PATH="/backend/.venv/bin:$PATH"
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
