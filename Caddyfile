@@ -1,8 +1,9 @@
-parl-check.se {
+parlcheck.se {
     root * /srv/frontend
     file_server
+    try_files {path} /index.html
 }
 
-api.parl-check.se {
+api.parlcheck.se {
     reverse_proxy backend:8000
 }

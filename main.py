@@ -9,7 +9,7 @@ from api_caller import fetch_document_html
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https//example.com"],
+    allow_origins=["https//api.parlcheck.se"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
