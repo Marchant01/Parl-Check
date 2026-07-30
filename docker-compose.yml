@@ -35,7 +35,6 @@ services:
       - .env
     volumes:
       - frontend_dist:/usr/src/dist
-    restart: unless-stopped
 
   tests:
     profiles:
