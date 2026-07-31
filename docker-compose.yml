@@ -34,7 +34,7 @@ services:
     env_file:
       - .env
     volumes:
-      - frontend_dist:/usr/src/dist
+      - frontend_dist:/usr/src/app/dist
 
   tests:
     profiles:
