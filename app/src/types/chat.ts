@@ -5,7 +5,7 @@ export interface  ChatMessage {
 }
 
 export interface ChatRequest {
-  question: string
+  prompt: string
 }
 
 export interface ChatResponse {
